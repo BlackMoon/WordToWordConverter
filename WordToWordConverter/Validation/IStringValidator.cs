@@ -1,4 +1,5 @@
-﻿namespace WordToWordConverter.Validation
+﻿
+namespace WordToWordConverter.Validation
 {
     /// <summary>
     /// Интерфейс строкового валидатора

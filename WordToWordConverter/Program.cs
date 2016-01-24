@@ -4,6 +4,7 @@ using System.Configuration;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using StructureMap;
@@ -45,8 +46,8 @@ namespace WordToWordConverter
                 try
                 {
                     Console.WriteLine("Введите начальное слово:");
-                    var wordFrom = Console.ReadLine();
-
+                    string wordFrom = Console.ReadLine();
+                    wordFrom = "ТОК";
                     string msg;
 
                     validator.Value = wordFrom;
@@ -55,8 +56,8 @@ namespace WordToWordConverter
 
                     Console.WriteLine();
                     Console.WriteLine("Введите конечное слово:");
-                    var wordTo = Console.ReadLine();
-
+                    string wordTo = Console.ReadLine();
+                    wordTo = "КОТ";
                     validator.Value = wordTo;
                     if (!validator.Validate(out msg))
                         throw new Exception(msg);
@@ -86,6 +87,7 @@ namespace WordToWordConverter
                         Console.WriteLine();
                     });
 
+                    // интервал - 5 сек
                     while (!Task.WaitAll(new[] {taskConverter, taskConverterContinue}, 5000))
                     {
                         Console.Write("-");
@@ -97,10 +99,15 @@ namespace WordToWordConverter
                 }
                 catch (AggregateException aex)
                 {
-                    Console.WriteLine(string.Join("\n", aex.InnerExceptions.Select(ex => ex.Message)));
+                    Console.WriteLine();
+
+                    Console.WriteLine(string.Join("\n", aex.InnerExceptions
+                        .Where(ex => ex.Source == Assembly.GetExecutingAssembly().GetName().Name)
+                        .Select(ex => ex.Message)));
                 }
                 catch (Exception ex)
                 {
+                    Console.WriteLine();
                     Console.WriteLine(ex.Message);
                 }
 
