@@ -14,5 +14,11 @@
         /// Значение
         /// </summary>
         public string Word { get; set; }
+
+        public WordItem(int id, string word)
+        {
+            Id = id;
+            Word = word;
+        }    
     }
 }

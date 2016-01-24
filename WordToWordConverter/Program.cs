@@ -1,6 +1,11 @@
 ﻿using System;
+using System.Configuration;
+using System.IO;
+using System.Threading.Tasks;
 using StructureMap;
+using WordToWordConverter.Configuration;
 using WordToWordConverter.Converter;
+using WordToWordConverter.Data;
 
 namespace WordToWordConverter
 {
@@ -11,6 +16,15 @@ namespace WordToWordConverter
         {
             IContainer container = ConfigureDependencies();
 
+            AlgorithmSettingsSection config = (AlgorithmSettingsSection)ConfigurationManager.GetSection("algorithmsection");
+            
+            string dictionaryFile = ConfigurationManager.AppSettings["dictionaryFile"];
+            if (!string.IsNullOrEmpty(dictionaryFile))
+                dictionaryFile = Path.GetFullPath(dictionaryFile);
+
+            FileDictionaryMapper dictionaryMapper = new FileDictionaryMapper(dictionaryFile);
+            Task task = dictionaryMapper.Load();
+
             string answer = Yes;
             while (answer != null && answer.ToUpper() == Yes)
             {
@@ -19,6 +33,7 @@ namespace WordToWordConverter
                 WriteWelcome();
                 ReadWords();
 
+                task.Wait();
                 // TODO operations
                 IConverter converter = container.GetInstance<IConverter>();
 
@@ -36,7 +51,6 @@ namespace WordToWordConverter
             return new Container(x =>
             {
                 x.For<IConverter>().Use<WordConverter>();
-                
             });
         }
 

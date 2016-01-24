@@ -53,7 +53,8 @@
     <Compile Include="Configuration\AlgorithmSettingsSection.cs" />
     <Compile Include="Converter\IConverter.cs" />
     <Compile Include="Converter\WordConverter.cs" />
-    <Compile Include="Data\FileDictionary.cs" />
+    <Compile Include="Data\FileDictionaryMapper.cs" />
+    <Compile Include="Data\IDictionaryMapper.cs" />
     <Compile Include="Data\IRepository.cs" />
     <Compile Include="Data\WordItem.cs" />
     <Compile Include="Program.cs" />
