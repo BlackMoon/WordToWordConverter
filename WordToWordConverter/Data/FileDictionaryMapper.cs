@@ -1,5 +1,4 @@
 ﻿using System;
-using System.CodeDom;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -8,11 +7,11 @@ namespace WordToWordConverter.Data
     /// <summary>
     /// 
     /// </summary>
-    internal class FileDictionaryMapper : IDictionaryMapper<int, WordItem>
+    public class FileDictionaryMapper : IDictionaryMapper<int, WordItem>
     {
-        private readonly string _fileName;
+        public string FileName { get; set; }
 
-        public List<WordItem> Items = new List<WordItem>(); 
+        private readonly List<WordItem> _items = new List<WordItem>();
 
         public IEnumerable<WordItem> GetAll()
         {
@@ -21,30 +20,27 @@ namespace WordToWordConverter.Data
 
         public WordItem Get(int key)
         {
-            throw new NotImplementedException();
-        }
-
-        public FileDictionaryMapper(string fileName)
-        {
-            if (string.IsNullOrEmpty(fileName))
-                throw new ArgumentException("fileName");
-
-            _fileName = fileName;
+            return _items.Find(w => w.Id == key);
         }
 
         public Task Load()
         {
+            _items.Clear();
+
             return Task.Run(() =>
             {
-                string[] lines = System.IO.File.ReadAllLines(_fileName);
-
-                int len = lines.Length;
-
-                Items = new List<WordItem>(len);
-                for (int i = 0; i < len; i++)
+                if (!string.IsNullOrEmpty(FileName))
                 {
-                    Items.Add(new WordItem(i, lines[i]));
-                }                    
+                    string[] lines = System.IO.File.ReadAllLines(FileName);
+
+                    int len = lines.Length;
+
+                    _items.Capacity = len;
+                    for (int i = 0; i < len; i++)
+                    {
+                        _items.Add(new WordItem(i, lines[i]));
+                    }
+                }
             });
         }
     }

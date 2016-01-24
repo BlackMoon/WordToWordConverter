@@ -7,7 +7,7 @@ namespace WordToWordConverter.Configuration
     /// </summary>
     public class AlgorithmSettingsSection : ConfigurationSection
     {
-        [ConfigurationProperty("maxSteps", DefaultValue = "200", IsRequired = true)]
+        [ConfigurationProperty("maxSteps", DefaultValue = "100", IsRequired = true)]
         public int MaxSteps
         {
             get { return (int) this["maxSteps"]; }

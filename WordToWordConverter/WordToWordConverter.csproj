@@ -59,8 +59,8 @@
     <Compile Include="Data\WordItem.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Validation\IValidation.cs" />
-    <Compile Include="Validation\Validation.cs" />
+    <Compile Include="Validation\IStringValidator.cs" />
+    <Compile Include="Validation\StringValidator.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
