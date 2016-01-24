@@ -41,13 +41,13 @@ namespace WordToWordConverter
             while (answer != null && answer.ToUpper() == Yes)
             {
                 Console.Clear();
-                WriteWelcome();
+                WriteWelcome(config);
 
                 try
                 {
                     Console.WriteLine("Введите начальное слово:");
                     string wordFrom = Console.ReadLine();
-                    wordFrom = "НОТА";
+                    wordFrom = "НОтА";
                     string msg;
 
                     validator.Value = wordFrom;
@@ -126,10 +126,11 @@ namespace WordToWordConverter
             });
         }
         
-        private static void WriteWelcome()
+        private static void WriteWelcome(AlgorithmSettingsSection config)
         {
             Console.WriteLine("WordToWordConverter");
             Console.WriteLine("-------------------");
+            Console.WriteLine("Настройки (.config): maxSteps - " + config.MaxSteps + ", maxPopulation - " + config.MaxPopulation);
             Console.WriteLine();
         }
     }

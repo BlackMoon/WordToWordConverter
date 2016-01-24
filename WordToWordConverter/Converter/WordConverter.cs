@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using WordToWordConverter.Data;
 
 namespace WordToWordConverter.Converter
@@ -124,6 +126,7 @@ namespace WordToWordConverter.Converter
             startChain.Positions.Add(-1);
             startChain.Score = 0;
 
+            // TODO: можно в будущем добавить потокобезопасную коллекцию
             List<Chain> mutationChains = new List<Chain>() { startChain };
             IList<int> resultKeysChain = new List<int>();
 
@@ -134,16 +137,18 @@ namespace WordToWordConverter.Converter
     		{
     		    bool found = false;
                 // Не дошли ли до искомого слова?
-    			foreach (Chain chain in mutationChains) 
+                foreach(Chain chain in mutationChains)
                 {
-    				if (chain.Keys.Last() == wordToId) {
-	    				// Найдена одна из кратчайших (для этого забега) цепочек
-		    			resultKeysChain = chain.Keys;
-    				    found = true;
-			    		break;
-				    }
-			    }
-                
+                    if (chain.Keys.Last() == wordToId)
+                    {
+                        // Найдена одна из кратчайших (для этого забега) цепочек
+                        resultKeysChain = chain.Keys;
+                        found = true;
+                      
+                        break;
+                    }    
+                }
+
                 // Выращиваем следующее поколение
     		    if (!found)
     		    {
@@ -161,7 +166,7 @@ namespace WordToWordConverter.Converter
     		                lastWord = lastItem.Word;
 
     		            IDictionary<int, int> nextMutations = DictionaryMapper.FindMutationVariants(lastWord, wordTo, fromLength, lastMutatedPos, chain.Keys);
-
+                        
     		            foreach (KeyValuePair<int, int> kvp in nextMutations)
     		            {
     		                WordItem nextItem = DictionaryMapper.Get(kvp.Key);
@@ -170,14 +175,12 @@ namespace WordToWordConverter.Converter
     		                int score = GetWordScore(nextWord, wordTo);
 
     		                // Новый потомок
-    		                Chain newMutationChain = new Chain
-    		                {
-    		                    Keys = chain.Keys, 
-                                Positions = chain.Positions, 
-                                Score = score
-    		                };
-                            
+    		                Chain newMutationChain = new Chain() { Score = score };
+    		                
+                            newMutationChain.Keys.AddRange(chain.Keys);
                             newMutationChain.Keys.Add(kvp.Key);
+
+    		                newMutationChain.Positions.AddRange(chain.Positions); 
                             newMutationChain.Positions.Add(kvp.Value);
 
     		                newMutationChains.Add(newMutationChain);
@@ -225,7 +228,6 @@ namespace WordToWordConverter.Converter
             IEnumerable<WordItem> resultChain = resultKeysChain.Select(k => DictionaryMapper.Get(k));
             return resultChain.Where(i => i != null).Select(i => i.Word);
         }
-
           
         /// <summary>
         /// Функция оценки похожести слова
