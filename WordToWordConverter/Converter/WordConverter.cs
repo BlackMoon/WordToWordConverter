@@ -1,7 +1,7 @@
 ﻿
 namespace WordToWordConverter.Converter
 {
-    internal class WordWizard
+    internal class WordConverter : IConverter
     {
     }
 }

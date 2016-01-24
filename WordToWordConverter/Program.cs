@@ -1,13 +1,16 @@
 ﻿using System;
-using System.Net.Mime;
+using StructureMap;
+using WordToWordConverter.Converter;
 
 namespace WordToWordConverter
 {
     class Program
     {
         private const string Yes = "Y";
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
+            IContainer container = ConfigureDependencies();
+
             string answer = Yes;
             while (answer != null && answer.ToUpper() == Yes)
             {
@@ -17,6 +20,8 @@ namespace WordToWordConverter
                 ReadWords();
 
                 // TODO operations
+                IConverter converter = container.GetInstance<IConverter>();
+
                 Console.WriteLine();
                 Console.WriteLine("Operation");
                 Console.WriteLine();
@@ -26,7 +31,16 @@ namespace WordToWordConverter
             } 
         }
 
-        static void ReadWords()
+        private static IContainer ConfigureDependencies()
+        {
+            return new Container(x =>
+            {
+                x.For<IConverter>().Use<WordConverter>();
+                
+            });
+        }
+
+        private static void ReadWords()
         {
             Console.WriteLine("Введите начальное слово:");
             string word1 = Console.ReadLine();
@@ -35,7 +49,7 @@ namespace WordToWordConverter
             string word2 = Console.ReadLine();
         }
 
-        static void WriteWelcome()
+        private static void WriteWelcome()
         {
             Console.WriteLine("WordToWordConverter");
             Console.WriteLine("-------------------");
