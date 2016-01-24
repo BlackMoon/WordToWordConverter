@@ -10,12 +10,12 @@ namespace WordToWordConverter.Converter
         /// <summary>
         /// Ключ измененных слов
         /// </summary>
-        public IList<int> Keys { get; set; }
+        public List<int> Keys { get; set; }
 
         /// <summary>
         /// Позиции измененных букв
         /// </summary>
-        public IList<int> Positions { get; set; }
+        public List<int> Positions { get; set; }
 
         /// <summary>
         /// Веса преобразований (для поиска оптимальных цепочек)

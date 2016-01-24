@@ -98,12 +98,12 @@ namespace WordToWordConverter.Converter
                 throw new ArgumentException(wordTo);
 
             // Принудительно приводим к нижнему регистру входные слова
-            string lWordFrom = wordFrom.ToLower(),
-                   lWordTo = wordTo.ToLower();
+            wordFrom = wordFrom.ToLower();
+            wordTo = wordTo.ToLower();
 
             // Для идентичных слов ответ очевиден и не требует поиска
-		    if (lWordFrom == lWordTo) 
-			    return new [] { lWordTo };
+		    if (wordFrom == wordTo) 
+			    return new [] { wordTo };
 
             int fromLength = wordFrom.Length,
                 toLength = wordTo.Length;
@@ -112,10 +112,10 @@ namespace WordToWordConverter.Converter
                 throw new Exception("Слова должны быть одинаковой длины.");
 
             // Существование первого слова в словаре для алгоритма не обязательно
-            int? wordFromId = DictionaryMapper.GetKey(lWordFrom);
+            int? wordFromId = DictionaryMapper.GetKey(wordFrom);
 
             // Но для второго слова, для простоты, будем это требовать
-            int? wordToId = DictionaryMapper.GetKey(lWordTo);
+            int? wordToId = DictionaryMapper.GetKey(wordTo);
             if (!wordToId.HasValue) 
                 throw new NullReferenceException("Конечное слово " + wordTo + " не обнаружено в словаре.");
             
@@ -153,15 +153,14 @@ namespace WordToWordConverter.Converter
     		            int lastKey = chain.Keys.Last();
     		            int lastMutatedPos = chain.Positions.Last();
 
-    		            string lastWord = lWordFrom;
+    		            string lastWord = wordFrom;
 
     		            WordItem lastItem = DictionaryMapper.Get(lastKey);
 
     		            if (lastItem != null)
     		                lastWord = lastItem.Word;
 
-    		            IDictionary<int, int> nextMutations = DictionaryMapper.FindMutationVariants(lastWord, lWordTo,
-    		                fromLength, lastMutatedPos, chain.Keys);
+    		            IDictionary<int, int> nextMutations = DictionaryMapper.FindMutationVariants(lastWord, wordTo, fromLength, lastMutatedPos, chain.Keys);
 
     		            foreach (KeyValuePair<int, int> kvp in nextMutations)
     		            {
@@ -171,10 +170,15 @@ namespace WordToWordConverter.Converter
     		                int score = GetWordScore(nextWord, wordTo);
 
     		                // Новый потомок
-    		                Chain newMutationChain = chain;
-    		                newMutationChain.Keys.Add(kvp.Key);
-    		                newMutationChain.Positions.Add(kvp.Value);
-    		                newMutationChain.Score = score;
+    		                Chain newMutationChain = new Chain
+    		                {
+    		                    Keys = chain.Keys, 
+                                Positions = chain.Positions, 
+                                Score = score
+    		                };
+                            
+                            newMutationChain.Keys.Add(kvp.Key);
+                            newMutationChain.Positions.Add(kvp.Value);
 
     		                newMutationChains.Add(newMutationChain);
     		            }
@@ -182,7 +186,7 @@ namespace WordToWordConverter.Converter
 
     		        // Предыдущее поколение убираем не полностью
     		        // Выкашиваем только часть самых слабых, оставляя сильных для конкуренции новому поколению
-    		        int index = maxPopulation/2;
+    		        int index = maxPopulation / 2;
 
     		        if (index < mutationChains.Count)
     		            mutationChains.RemoveRange(index, mutationChains.Count - index);
@@ -191,8 +195,7 @@ namespace WordToWordConverter.Converter
 
     		        // А если нового не появилось..
     		        if (!mutationChains.Any())
-    		            throw new Exception("На шаге" + step + " (из максимально " + maxSteps +
-    		                                ") закончились варианты. Поиск не увенчался успехом.");
+    		            throw new Exception("На шаге" + step + " (из максимально " + maxSteps + ") закончились варианты. Поиск не увенчался успехом.");
 
     		        // Сортируем новое поколение по "степени приспособленности" (похожести последнего слова цепочки на искомое)
     		        mutationChains.Sort((a, b) =>
@@ -232,6 +235,15 @@ namespace WordToWordConverter.Converter
         /// <returns></returns>
         public int GetWordScore(string word, string comparationWord)
         {
+            if (string.IsNullOrEmpty(word))
+                throw new ArgumentException(word);
+
+            if (string.IsNullOrEmpty(comparationWord))
+                throw new ArgumentException(comparationWord);
+
+            word = word.ToLower();
+            comparationWord = comparationWord.ToLower();
+
 		    int i;
             // Частый случай поиска - с одним и тем же эталонным словом, - используем кэширование
 
@@ -249,6 +261,7 @@ namespace WordToWordConverter.Converter
 		    }
 
             double score = 0;
+
 		    for (i = 0; i < _wordLen; i++) 
             {
 			    char letter = word[i];
