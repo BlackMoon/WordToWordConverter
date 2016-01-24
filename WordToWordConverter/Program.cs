@@ -48,7 +48,7 @@ namespace WordToWordConverter
                     var wordFrom = Console.ReadLine();
 
                     string msg;
-    
+
                     validator.Value = wordFrom;
                     if (!validator.Validate(out msg))
                         throw new Exception(msg);
@@ -85,22 +85,26 @@ namespace WordToWordConverter
                         }
                         Console.WriteLine();
                     });
-                    
-                    while (!Task.WaitAll(new [] { taskConverter, taskConverterContinue }, 5000))
+
+                    while (!Task.WaitAll(new[] {taskConverter, taskConverterContinue}, 5000))
                     {
                         Console.Write("-");
                     }
                     watch.Stop();
 
                     Console.WriteLine("Время: " + watch.Elapsed);
-                    
+
+                }
+                catch (AggregateException aex)
+                {
+                    Console.WriteLine(string.Join("\n", aex.InnerExceptions.Select(ex => ex.Message)));
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine(ex.Message);
-                    Console.WriteLine();
                 }
 
+                Console.WriteLine();
                 Console.WriteLine("Продолжить? [Y/N]");
                 answer = Console.ReadLine();
             } 

@@ -1,4 +1,5 @@
 ﻿
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using WordToWordConverter.Data;
@@ -81,6 +82,12 @@ namespace WordToWordConverter.Converter
         /// <returns></returns>
         public IEnumerable<string> FindMutationChain(string wordFrom, string wordTo, int maxSteps = 100, int maxPopulation = 50)
         {
+            int fromLength = wordFrom.Length,
+                toLength = wordTo.Length;
+
+            if (fromLength != toLength)
+                throw new Exception("Слова должны быть одинаковой длины.");
+
             return new string[] {"sss", "dd"};
         }
 
