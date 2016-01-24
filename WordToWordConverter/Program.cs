@@ -82,7 +82,7 @@ namespace WordToWordConverter
                         int i = 0;
                         foreach (string word in t.Result)
                         {
-                            Console.WriteLine(++i + "\t" + word);
+                            Console.WriteLine("\t" + ++i + "\t" + word);
                         }
                         Console.WriteLine();
                     });

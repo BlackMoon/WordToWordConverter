@@ -41,10 +41,10 @@ namespace WordToWordConverter.Data
         /// <param name="wordFrom">Начальное слово</param>
         /// <param name="wordTo">Конечное слово</param>
         /// <param name="wordLen">Длина обоих слов</param>
-        /// <param name="disabledMutationPos">ндекс в слове буквы, которую не нужно менять (была изменена на предыдущем шаге)</param>
-        /// <param name="excludedWordKeys">Уже использованные слова</param>
-        /// <returns></returns>
-        public IDictionary<int, int> FindMutationVariants(string wordFrom, string wordTo, int wordLen, int disabledMutationPos, IList<int> excludedWordKeys)
+        /// <param name="disabledMutationPos">индекс в слове буквы, которую не нужно менять (была изменена на предыдущем шаге)</param>
+        /// <param name="excludedWordIds">Уже использованные слова</param>
+        /// <returns>Список вариантов преобразований [id слова из словаря, № буквы]</returns>
+        public IDictionary<int, int> FindMutationVariants(string wordFrom, string wordTo, int wordLen, int disabledMutationPos, IList<int> excludedWordIds)
         {
             IDictionary<int, int> variants = new Dictionary<int, int>();
 
@@ -87,26 +87,23 @@ namespace WordToWordConverter.Data
                         string word = item.Word;
 
 					    // Можно выходить, если слово уже начинается не так
-					    if (word.Substring(0, pos) != wordBeginning) {
+					    if (word.Substring(0, pos) != wordBeginning)
 						    break;
-					    }
 					    
                         // Пропускаем по критерию длины слова (простор для дальнейшей оптимизации)
-					    if (word.Length != wordLen) {
+					    if (word.Length != wordLen) 
 						    continue;
-					    }
 
 					    // Наконец, проверяем соответствие конца слова
-					    if (word.Substring(pos + 1) != wordEnding) {
+					    if (word.Substring(pos + 1) != wordEnding) 
 						    continue;
-					    }
 					
 					    // Не повторяемся - пропускаем ранее использованные слова
-					    if (excludedWordKeys.Contains(ix)) 
+					    if (excludedWordIds.Contains(ix)) 
                             continue;
 					
 					    // Слово подходит, добавляем как вариант
-					    variants.Add(ix, pos);
+					    variants[ix] = pos;
 				    }
                 }
             }
@@ -128,8 +125,11 @@ namespace WordToWordConverter.Data
                     _items.Capacity = len;
                     for (int i = 0; i < len; i++)
                     {
-                        _items.Add(new WordItem(i, lines[i]));
+                        _items.Add(new WordItem(i, lines[i].ToLower()));
                     }
+
+                    // сортировка по возрастанию
+                    _items.Sort((a, b) => String.CompareOrdinal(a.Word, b.Word));
                 }
             });
         }

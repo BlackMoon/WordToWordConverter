@@ -8,6 +8,12 @@ namespace WordToWordConverter.Converter
 {
     public class WordConverter : IConverter
     {
+        #region Для поиска внутри [GetWordScope] - с одним и тем же эталонным словом, - используем кэширование
+        private int _wordLen;
+        private string _cachedComparationWord;
+        private readonly IList<Tuple<char, bool>> _cwLetters = new List<Tuple<char, bool>>();
+        #endregion
+
         /// <summary>
         /// частота употребления букв (взято с Wiki)
         /// </summary>
@@ -85,7 +91,6 @@ namespace WordToWordConverter.Converter
         /// <returns></returns>
         public IEnumerable<string> FindMutationChain(string wordFrom, string wordTo, int maxSteps = 100, int maxPopulation = 50)
         {
-
             if (string.IsNullOrEmpty(wordFrom))
                 throw new ArgumentException(wordFrom);
 
@@ -117,9 +122,9 @@ namespace WordToWordConverter.Converter
             Chain startChain  = new Chain();
             startChain.Keys.Add(wordFromId ?? -1);
             startChain.Positions.Add(-1);
-            startChain.Scores.Add(0);
+            startChain.Score = 0;
 
-            IList<Chain> mutatedChains = new List<Chain>() { startChain };
+            List<Chain> mutationChains = new List<Chain>() { startChain };
             IList<int> resultKeysChain = new List<int>();
 
             // Главный цикл генетического алгоритма поиска
@@ -129,7 +134,7 @@ namespace WordToWordConverter.Converter
     		{
     		    bool found = false;
                 // Не дошли ли до искомого слова?
-    			foreach (Chain chain in mutatedChains) 
+    			foreach (Chain chain in mutationChains) 
                 {
     				if (chain.Keys.Last() == wordToId) {
 	    				// Найдена одна из кратчайших (для этого забега) цепочек
@@ -142,42 +147,72 @@ namespace WordToWordConverter.Converter
                 // Выращиваем следующее поколение
     		    if (!found)
     		    {
-			        IList<Chain> newMutationChains = new List<Chain>();
-    		        foreach (Chain chain in mutatedChains)
+    		        IList<Chain> newMutationChains = new List<Chain>();
+    		        foreach (Chain chain in mutationChains)
     		        {
     		            int lastKey = chain.Keys.Last();
-				        int lastMutatedPos = chain.Positions.Last();
+    		            int lastMutatedPos = chain.Positions.Last();
 
-    		            string lastWord = wordFrom;
-    		           
+    		            string lastWord = lWordFrom;
+
     		            WordItem lastItem = DictionaryMapper.Get(lastKey);
-                            
-                        if (lastItem != null)
+
+    		            if (lastItem != null)
     		                lastWord = lastItem.Word;
 
-                        IDictionary<int, int> nextMutations = DictionaryMapper.FindMutationVariants(lastWord, wordTo, fromLength, lastMutatedPos, chain.Keys);
+    		            IDictionary<int, int> nextMutations = DictionaryMapper.FindMutationVariants(lastWord, lWordTo,
+    		                fromLength, lastMutatedPos, chain.Keys);
 
     		            foreach (KeyValuePair<int, int> kvp in nextMutations)
     		            {
-                            WordItem nextItem = DictionaryMapper.Get(kvp.Key);
-                            string nextWord = nextItem.Word;
-                            
-                            int score = GetWordScore(nextWord, wordTo);
+    		                WordItem nextItem = DictionaryMapper.Get(kvp.Key);
+    		                string nextWord = nextItem.Word;
 
-                            // Новый потомок
-					        Chain newMutationChain = chain;
-					        newMutationChain.Keys.Add(kvp.Key);
-					        newMutationChain.Positions.Add(kvp.Value);
-					        newMutationChain.Scores.Add(score);
-					
-					        newMutationChains.Add(newMutationChain);
+    		                int score = GetWordScore(nextWord, wordTo);
 
+    		                // Новый потомок
+    		                Chain newMutationChain = chain;
+    		                newMutationChain.Keys.Add(kvp.Key);
+    		                newMutationChain.Positions.Add(kvp.Value);
+    		                newMutationChain.Score = score;
+
+    		                newMutationChains.Add(newMutationChain);
     		            }
-
-
     		        }
+
+    		        // Предыдущее поколение убираем не полностью
+    		        // Выкашиваем только часть самых слабых, оставляя сильных для конкуренции новому поколению
+    		        int index = maxPopulation/2;
+
+    		        if (index < mutationChains.Count)
+    		            mutationChains.RemoveRange(index, mutationChains.Count - index);
+
+    		        mutationChains.AddRange(newMutationChains);
+
+    		        // А если нового не появилось..
+    		        if (!mutationChains.Any())
+    		            throw new Exception("На шаге" + step + " (из максимально " + maxSteps +
+    		                                ") закончились варианты. Поиск не увенчался успехом.");
+
+    		        // Сортируем новое поколение по "степени приспособленности" (похожести последнего слова цепочки на искомое)
+    		        mutationChains.Sort((a, b) =>
+    		        {
+    		            int diff = b.Score - a.Score;
+    		            if (diff == 0)
+    		            {
+    		                Random rnd = new Random();
+    		                diff = rnd.Next(-1, 1);
+    		            }
+    		            return diff;
+    		        });
+
+    		        // Естественный отбор - оставляем самых лучших
+    		        if (maxPopulation < mutationChains.Count)
+    		            mutationChains.RemoveRange(maxPopulation, mutationChains.Count - maxPopulation);
     		    }
-            }
+    		    else
+    		        break;
+    		}
 
             // слишком глубокий поиск?
 		    if (step == maxSteps) 
@@ -197,30 +232,30 @@ namespace WordToWordConverter.Converter
         /// <returns></returns>
         public int GetWordScore(string word, string comparationWord)
         {
-            string cachedComparationWord = string.Empty;
-		    int i, wordLen = 0;
-		    IList<Tuple<char, bool>> cwLetters = new List<Tuple<char, bool>>();
-		
-            if (cachedComparationWord != comparationWord) {
-			    cachedComparationWord = comparationWord;
-			    wordLen = comparationWord.Length;
-			    cwLetters.Clear();
+		    int i;
+            // Частый случай поиска - с одним и тем же эталонным словом, - используем кэширование
 
-			    for (i = 0; i < wordLen; i++) {
+            if (_cachedComparationWord != comparationWord) {
+			    _cachedComparationWord = comparationWord;
+
+			    _wordLen = comparationWord.Length;
+			    _cwLetters.Clear();
+
+			    for (i = 0; i < _wordLen; i++) {
 				    
                     char letter = comparationWord[i];
-                    cwLetters.Add(new Tuple<char, bool>(letter, IsVovel(letter)));
+                    _cwLetters.Add(new Tuple<char, bool>(letter, IsVovel(letter)));
 			    }
 		    }
 
             double score = 0;
-		    for (i = 0; i < wordLen; i++) 
+		    for (i = 0; i < _wordLen; i++) 
             {
 			    char letter = word[i];
 			    bool isVovel = IsVovel(letter);
 			
 			    // Полностью совпадающим символам максимальная оценка = 3
-			    if (letter == cwLetters[i].Item1) 
+			    if (letter == _cwLetters[i].Item1) 
                 {
 				    score += 1;
 				
@@ -235,7 +270,7 @@ namespace WordToWordConverter.Converter
 			
 			    if (isVovel) {
 				    
-                    if (cwLetters[i].Item2) 
+                    if (_cwLetters[i].Item2) 
 					    // Совпадение позиции гласной буквы = 2
 					    score += 2 + 2 * _letterFrequencesVovels[letter];
 				    

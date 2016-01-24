@@ -20,13 +20,12 @@ namespace WordToWordConverter.Converter
         /// <summary>
         /// Веса преобразований (для поиска оптимальных цепочек)
         /// </summary>
-        public IList<int> Scores { get; set; }
+        public int Score { get; set; }
 
         public Chain()
         {
             Keys = new List<int>();
             Positions = new List<int>();
-            Scores = new List<int>();
         }
     }
 }
