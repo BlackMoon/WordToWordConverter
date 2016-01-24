@@ -47,7 +47,7 @@ namespace WordToWordConverter
                 {
                     Console.WriteLine("Введите начальное слово:");
                     string wordFrom = Console.ReadLine();
-                    wordFrom = "НОтА";
+                    wordFrom = "НОгА";
                     string msg;
 
                     validator.Value = wordFrom;

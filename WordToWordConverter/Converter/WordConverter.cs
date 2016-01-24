@@ -1,9 +1,6 @@
-﻿
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using WordToWordConverter.Data;
 
 namespace WordToWordConverter.Converter
@@ -125,8 +122,7 @@ namespace WordToWordConverter.Converter
             startChain.Keys.Add(wordFromId ?? -1);
             startChain.Positions.Add(-1);
             startChain.Score = 0;
-
-            // TODO: можно в будущем добавить потокобезопасную коллекцию
+            
             List<Chain> mutationChains = new List<Chain>() { startChain };
             IList<int> resultKeysChain = new List<int>();
 
@@ -166,7 +162,7 @@ namespace WordToWordConverter.Converter
     		                lastWord = lastItem.Word;
 
     		            IDictionary<int, int> nextMutations = DictionaryMapper.FindMutationVariants(lastWord, wordTo, fromLength, lastMutatedPos, chain.Keys);
-                        
+    		            
     		            foreach (KeyValuePair<int, int> kvp in nextMutations)
     		            {
     		                WordItem nextItem = DictionaryMapper.Get(kvp.Key);
