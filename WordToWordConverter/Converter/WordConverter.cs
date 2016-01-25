@@ -174,7 +174,7 @@ namespace WordToWordConverter.Converter
     		                int score = GetWordScore(nextWord, wordTo);
 
     		                // Новый потомок
-    		                Chain newMutationChain = new Chain() {Score = score};
+    		                Chain newMutationChain = new Chain(chain.Keys.Count + 1) {Score = score};
 
     		                newMutationChain.Keys.AddRange(chain.Keys);
     		                newMutationChain.Keys.Add(kvp.Key);

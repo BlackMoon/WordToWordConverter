@@ -63,6 +63,7 @@ namespace WordToWordConverter
                 Console.Clear();
                 WriteWelcome(algConfig);
 
+                Stopwatch watch = new Stopwatch();
                 try
                 {
                     taskDictionary.Wait();
@@ -88,7 +89,7 @@ namespace WordToWordConverter
                     Console.WriteLine();
                     Console.WriteLine("Идет преобразование..");
 
-                    Stopwatch watch = Stopwatch.StartNew();
+                    watch.Start();
 
                     Task<IEnumerable<string>> taskConverter =
                         Task.Factory.StartNew(
@@ -112,9 +113,6 @@ namespace WordToWordConverter
                     {
                         Console.Write("-");
                     }
-                    watch.Stop();
-
-                    Console.WriteLine("Время: " + watch.Elapsed);
 
                 }
                 catch (AggregateException aex)
@@ -130,6 +128,10 @@ namespace WordToWordConverter
                     Console.WriteLine();
                     Console.WriteLine(ex.Message);
                 }
+
+                watch.Stop();
+
+                Console.WriteLine("Время: " + watch.Elapsed);
 
                 Console.WriteLine();
                 Console.WriteLine("Продолжить? [Y/N]");

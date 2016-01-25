@@ -11,16 +11,10 @@ namespace WordToWordConverter.Data
 {
     public class DbDictionaryMapper: IDictionaryMapper
     {
-        private readonly SQLiteConnection _connection;
+        private SQLiteConnection _connection;
 
         public string ConnectionString { get; set; }
-
-        public DbDictionaryMapper()
-        {
-            string connStr = ConfigurationManager.ConnectionStrings[ConnectionString].ConnectionString;
-            if (!string.IsNullOrEmpty(connStr))
-                _connection = new SQLiteConnection(connStr);
-        }
+        
 
         public IEnumerable<WordItem> GetAll()
         {
@@ -29,12 +23,28 @@ namespace WordToWordConverter.Data
 
         public WordItem Get(int key)
         {
-            throw new NotImplementedException();
+            WordItem item = null;
+            using (IDbCommand cmd = new SQLiteCommand("SELECT w.word FROM worditems w WHERE w.id = @k", _connection))
+            {
+                cmd.Parameters.Add(new SQLiteParameter("@k", key));
+                object v = cmd.ExecuteScalar();
+                if (v != null)
+                    item = new WordItem(key, (string) v);
+            }
+            return item;
         }
 
         public int? GetKey(string value)
         {
-            throw new NotImplementedException();
+            int? key = null;
+            using (IDbCommand cmd = new SQLiteCommand("SELECT w.id FROM worditems w WHERE w.word = @w", _connection))
+            {
+                cmd.Parameters.Add(new SQLiteParameter("@w", value));
+                object v = cmd.ExecuteScalar();
+                if (v != null)
+                    key = Convert.ToInt32(v);
+            }
+            return key;
         }
 
         /// <summary>
@@ -74,18 +84,25 @@ namespace WordToWordConverter.Data
                     int ix = 0;
 
                     List<WordItem> items = new List<WordItem>(); 
-                    using (IDbCommand cmd = new SQLiteCommand("SELECT w.id, w.word FROM worditems w WHERE w.word LIKE @0", _connection))
+
+                    if (!string.IsNullOrEmpty(wordBeginning))
                     {
-                        cmd.Parameters.Add(new SQLiteParameter(DbType.String, wordBeginning));
-                        using (IDataReader reader = cmd.ExecuteReader())
+                        string sql = "SELECT w.id, w.word FROM worditems w WHERE w.word LIKE @w AND LENGTH(w.word) = " + wordLen;
+                        if (excludedWordIds.Any())
+                            sql += " AND w.id NOT IN (" +  string.Join(", ", excludedWordIds) + ")";
+
+                        using (IDbCommand cmd = new SQLiteCommand(sql, _connection))
                         {
-                            while (reader.Read())
+                            cmd.Parameters.Add(new SQLiteParameter("@w", wordBeginning + "%"));
+                            using (IDataReader reader = cmd.ExecuteReader())
                             {
-                                items.Add(new WordItem(reader.GetInt32(0), reader.GetString(1)));
+                                while (reader.Read())
+                                {
+                                    items.Add(new WordItem(reader.GetInt32(0), reader.GetString(1)));
+                                }
                             }
                         }
                     }
-                    
 
                     // Перебираем
                     for (; ix < items.Count; ix++)
@@ -105,10 +122,6 @@ namespace WordToWordConverter.Data
                         if (word.Substring(pos + 1) != wordEnding)
                             continue;
 
-                        // Не повторяемся - пропускаем ранее использованные слова
-                        if (excludedWordIds.Contains(ix))
-                            continue;
-
                         // Слово подходит, добавляем как вариант
                         variants[item.Id] = pos;
                     }
@@ -121,7 +134,14 @@ namespace WordToWordConverter.Data
 
         public Task Load()
         {
-            return Task.Run(() => _connection.Open());
+            return Task.Run(() =>
+            {
+                string connStr = ConfigurationManager.ConnectionStrings[ConnectionString].ConnectionString;
+                if (!string.IsNullOrEmpty(connStr))
+                    _connection = new SQLiteConnection(connStr);
+
+                _connection.Open();
+            });
         }
     }
 }

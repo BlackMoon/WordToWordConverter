@@ -89,7 +89,7 @@ namespace WordToWordConverter.Data
 				    else {
 					    // Определяем с какой позиции в словаре начинать перебор
 				        
-                        WordItem item = items.FirstOrDefault(i => i.Word.StartsWith(wordBeginning));
+                        WordItem item = items.FirstOrDefault(i => i.Word.StartsWith(wordBeginning) && i.Word.Length == wordLen);
 				        if (item != null)
 				            ix = item.Id;
 

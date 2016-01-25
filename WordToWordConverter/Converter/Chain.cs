@@ -27,5 +27,11 @@ namespace WordToWordConverter.Converter
             Keys = new List<int>();
             Positions = new List<int>();
         }
+
+        public Chain(int capacity)
+        {
+            Keys = new List<int>(capacity);
+            Positions = new List<int>(capacity);
+        }
     }
 }
