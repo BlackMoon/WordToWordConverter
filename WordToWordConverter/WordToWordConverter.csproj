@@ -53,6 +53,7 @@
     <Compile Include="Configuration\AlgorithmSettingsSection.cs" />
     <Compile Include="Configuration\DictionarySettingsSection.cs" />
     <Compile Include="Converter\Chain.cs" />
+    <Compile Include="Misc\HtmlToTextConverter.cs" />
     <Compile Include="Converter\IConverter.cs" />
     <Compile Include="Converter\WordConverter.cs" />
     <Compile Include="Data\FileDictionaryMapper.cs" />

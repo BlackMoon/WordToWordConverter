@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace WordToWordConverter.Data
@@ -134,7 +135,8 @@ namespace WordToWordConverter.Data
                     _items.Capacity = len;
                     for (int i = 0; i < len; i++)
                     {
-                        _items.Add(new WordItem(i, lines[i].ToLower()));
+                        if (!string.IsNullOrEmpty(lines[i]))
+                            _items.Add(new WordItem(i, lines[i].ToLower()));
                     }
 
                     // сортировка по возрастанию
