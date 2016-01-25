@@ -23,6 +23,7 @@ namespace WordToWordConverter
         private static void Main(string[] args)
         {
             IContainer container = ConfigureDependencies();
+            IDictionaryMapper dictionaryMapper = null;
 
             // чтение настроек
             AlgorithmSettingsSection algConfig = (AlgorithmSettingsSection)ConfigurationManager.GetSection("algorithmsection");
@@ -32,12 +33,22 @@ namespace WordToWordConverter
             if (!string.IsNullOrEmpty(dictionaryFile))
                 dictionaryFile = Path.GetFullPath(dictionaryFile);
 
-            FileDictionaryMapper dictionaryMapper = new FileDictionaryMapper
+            if (dicConfig.IsDatabase)
             {
-                FileName = dictionaryFile, 
-                NeedSort = dicConfig.NeedSort
-            };
-            
+                dictionaryMapper = new DbDictionaryMapper()
+                {
+                    ConnectionString = dicConfig.ConnectionString
+                };
+            }
+            else
+            {
+                dictionaryMapper = new FileDictionaryMapper
+                {
+                    FileName = dictionaryFile,
+                    NeedSort = dicConfig.NeedSort
+                };
+            }
+
             Console.WriteLine("Загрузка словаря..");
             Task taskDictionary = dictionaryMapper.Load();
 

@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 using WordToWordConverter.Data;
 
 namespace WordToWordConverter.Converter
@@ -133,23 +136,23 @@ namespace WordToWordConverter.Converter
     		{
     		    bool found = false;
                 // Не дошли ли до искомого слова?
-                foreach(Chain chain in mutationChains)
-                {
+    		    Parallel.ForEach(mutationChains, (chain, loopOptions) =>
+    		    {
                     if (chain.Keys.Last() == wordToId)
                     {
                         // Найдена одна из кратчайших (для этого забега) цепочек
                         resultKeysChain = chain.Keys;
                         found = true;
-                      
-                        break;
+
+                        loopOptions.Stop();
                     }    
-                }
+    		    });
 
                 // Выращиваем следующее поколение
     		    if (!found)
     		    {
-    		        IList<Chain> newMutationChains = new List<Chain>();
-    		        foreach (Chain chain in mutationChains)
+                    ConcurrentBag<Chain> newMutationChains = new ConcurrentBag<Chain>();
+    		        Parallel.ForEach(mutationChains, chain =>
     		        {
     		            int lastKey = chain.Keys.Last();
     		            int lastMutatedPos = chain.Positions.Last();
@@ -162,7 +165,7 @@ namespace WordToWordConverter.Converter
     		                lastWord = lastItem.Word;
 
     		            IDictionary<int, int> nextMutations = DictionaryMapper.FindMutationVariants(lastWord, wordTo, fromLength, lastMutatedPos, chain.Keys);
-    		            
+
     		            foreach (KeyValuePair<int, int> kvp in nextMutations)
     		            {
     		                WordItem nextItem = DictionaryMapper.Get(kvp.Key);
@@ -171,17 +174,17 @@ namespace WordToWordConverter.Converter
     		                int score = GetWordScore(nextWord, wordTo);
 
     		                // Новый потомок
-    		                Chain newMutationChain = new Chain() { Score = score };
-    		                
-                            newMutationChain.Keys.AddRange(chain.Keys);
-                            newMutationChain.Keys.Add(kvp.Key);
+    		                Chain newMutationChain = new Chain() {Score = score};
 
-    		                newMutationChain.Positions.AddRange(chain.Positions); 
-                            newMutationChain.Positions.Add(kvp.Value);
+    		                newMutationChain.Keys.AddRange(chain.Keys);
+    		                newMutationChain.Keys.Add(kvp.Key);
+
+    		                newMutationChain.Positions.AddRange(chain.Positions);
+    		                newMutationChain.Positions.Add(kvp.Value);
 
     		                newMutationChains.Add(newMutationChain);
     		            }
-    		        }
+    		        });
 
     		        // Предыдущее поколение убираем не полностью
     		        // Выкашиваем только часть самых слабых, оставляя сильных для конкуренции новому поколению

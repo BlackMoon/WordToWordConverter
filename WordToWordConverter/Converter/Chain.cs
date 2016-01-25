@@ -8,7 +8,7 @@ namespace WordToWordConverter.Converter
     public class Chain
     {
         /// <summary>
-        /// Ключ измененных слов
+        /// Ключи новых наденных слов
         /// </summary>
         public List<int> Keys { get; set; }
 

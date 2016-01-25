@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -18,7 +20,7 @@ namespace WordToWordConverter.Data
 
         public IEnumerable<WordItem> GetAll()
         {
-            throw new NotImplementedException();
+            return _items;
         }
 
         public WordItem Get(int key)
@@ -57,6 +59,7 @@ namespace WordToWordConverter.Data
         public IDictionary<int, int> FindMutationVariants(string wordFrom, string wordTo, int wordLen, int disabledMutationPos, IList<int> excludedWordIds)
         {
             IDictionary<int, int> variants = new Dictionary<int, int>();
+            List<WordItem> items = (List<WordItem>)GetAll(); 
 
             for (int pos = 0; pos < wordLen; pos++)
             {
@@ -75,7 +78,7 @@ namespace WordToWordConverter.Data
                 }
                 else
                 {
-                    int ix;
+                    int ix = 0;
                     // Вспомогательного словаря нет - берём основной, ищем начало слова и перебираем всё подходящее
 				    if (pos == 0) {
 					    // Когда совсем нет вспомогательных словарей, и рассматривается мутация 
@@ -85,15 +88,19 @@ namespace WordToWordConverter.Data
 				    }
 				    else {
 					    // Определяем с какой позиции в словаре начинать перебор
-					    ix = _items.FindIndex(i => i.Word.StartsWith(wordBeginning));
+				        
+                        WordItem item = items.FirstOrDefault(i => i.Word.StartsWith(wordBeginning));
+				        if (item != null)
+				            ix = item.Id;
+
 				        if (ix < 0)
 				            ix = -ix;
 				    }
 
                     // Перебираем
-				    for (; ix < _items.Count; ix++) 
+				    for (; ix < items.Count; ix++) 
                     {
-					    WordItem item = _items[ix];
+					    WordItem item = items[ix];
                         string word = item.Word;
 
                         // Пропускаем по критерию длины слова (простор для дальнейшей оптимизации)
@@ -113,8 +120,9 @@ namespace WordToWordConverter.Data
                             continue;
 					
 					    // Слово подходит, добавляем как вариант
-					    variants[ix] = pos;
+					    variants[item.Id] = pos;
 				    }
+
                 }
             }
             return variants;
@@ -128,7 +136,7 @@ namespace WordToWordConverter.Data
             {
                 if (!string.IsNullOrEmpty(FileName))
                 {
-                    string[] lines = System.IO.File.ReadAllLines(FileName);
+                    string[] lines = File.ReadAllLines(FileName);
 
                     int len = lines.Length;
 
@@ -142,6 +150,9 @@ namespace WordToWordConverter.Data
                     // сортировка по возрастанию
                     if (NeedSort)
                         _items.Sort((x, y) => String.CompareOrdinal(x.Word, y.Word));
+#if DEBUG
+                    File.WriteAllLines("dicTest.txt", _items.Select(i => i.Word));
+#endif
                 }
             });
         }
