@@ -197,16 +197,7 @@ namespace WordToWordConverter.Converter
     		            throw new Exception("На шаге" + step + " (из максимально " + maxSteps + ") закончились варианты. Поиск не увенчался успехом.");
 
     		        // Сортируем новое поколение по "степени приспособленности" (похожести последнего слова цепочки на искомое)
-    		        mutationChains.Sort((a, b) =>
-    		        {
-    		            int diff = b.Score - a.Score;
-    		            if (diff == 0)
-    		            {
-    		                Random rnd = new Random();
-    		                diff = rnd.Next(-1, 1);
-    		            }
-    		            return diff;
-    		        });
+    		        mutationChains.Sort((a, b) => b.Score - a.Score);
 
     		        // Естественный отбор - оставляем самых лучших
     		        if (maxPopulation < mutationChains.Count)

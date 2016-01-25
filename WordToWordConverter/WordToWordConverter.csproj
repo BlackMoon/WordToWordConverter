@@ -51,6 +51,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Configuration\AlgorithmSettingsSection.cs" />
+    <Compile Include="Configuration\DictionarySettingsSection.cs" />
     <Compile Include="Converter\Chain.cs" />
     <Compile Include="Converter\IConverter.cs" />
     <Compile Include="Converter\WordConverter.cs" />

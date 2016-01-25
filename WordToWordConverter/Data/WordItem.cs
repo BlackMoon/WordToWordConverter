@@ -24,6 +24,10 @@
             }
         }
 
+        public WordItem()
+        {
+        }
+
         public WordItem(int id, string word)
         {
             Id = id;

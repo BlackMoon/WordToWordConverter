@@ -23,13 +23,21 @@ namespace WordToWordConverter
         {
             IContainer container = ConfigureDependencies();
 
-            AlgorithmSettingsSection config = (AlgorithmSettingsSection)ConfigurationManager.GetSection("algorithmsection");
-            
-            string dictionaryFile = ConfigurationManager.AppSettings["dictionaryFile"];
+            // чтение настроек
+            AlgorithmSettingsSection algConfig = (AlgorithmSettingsSection)ConfigurationManager.GetSection("algorithmsection");
+            DictionarySettingsSection dicConfig = (DictionarySettingsSection)ConfigurationManager.GetSection("dictionarysection");
+
+            string dictionaryFile = dicConfig.FileName;
             if (!string.IsNullOrEmpty(dictionaryFile))
                 dictionaryFile = Path.GetFullPath(dictionaryFile);
 
-            FileDictionaryMapper dictionaryMapper = new FileDictionaryMapper { FileName = dictionaryFile };
+            FileDictionaryMapper dictionaryMapper = new FileDictionaryMapper
+            {
+                FileName = dictionaryFile, 
+                NeedSort = dicConfig.NeedSort
+            };
+            
+            Console.WriteLine("Загрузка словаря..");
             Task taskDictionary = dictionaryMapper.Load();
 
             IConverter converter = container.GetInstance<IConverter>();
@@ -41,13 +49,15 @@ namespace WordToWordConverter
             while (answer != null && answer.ToUpper() == Yes)
             {
                 Console.Clear();
-                WriteWelcome(config);
+                WriteWelcome(algConfig);
 
                 try
                 {
+                    taskDictionary.Wait();
+
                     Console.WriteLine("Введите начальное слово:");
                     string wordFrom = Console.ReadLine();
-                    wordFrom = "НОгА";
+                    wordFrom = "НОрА";
                     string msg;
 
                     validator.Value = wordFrom;
@@ -62,8 +72,6 @@ namespace WordToWordConverter
                     if (!validator.Validate(out msg))
                         throw new Exception(msg);
 
-                    taskDictionary.Wait();
-
                     // Преобразование
                     Console.WriteLine();
                     Console.WriteLine("Идет преобразование..");
@@ -72,7 +80,7 @@ namespace WordToWordConverter
 
                     Task<IEnumerable<string>> taskConverter =
                         Task.Factory.StartNew(
-                            () => converter.FindMutationChain(wordFrom, wordTo, config.MaxSteps, config.MaxPopulation));
+                            () => converter.FindMutationChain(wordFrom, wordTo, algConfig.MaxSteps, algConfig.MaxPopulation));
 
                     Task taskConverterContinue = taskConverter.ContinueWith(t =>
                     {

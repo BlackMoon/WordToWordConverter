@@ -9,6 +9,8 @@ namespace WordToWordConverter.Data
     /// </summary>
     public class FileDictionaryMapper : IDictionaryMapper
     {
+        public bool NeedSort { get; set; }
+
         public string FileName { get; set; }
 
         private readonly List<WordItem> _items = new List<WordItem>();
@@ -20,18 +22,25 @@ namespace WordToWordConverter.Data
 
         public WordItem Get(int key)
         {
-            return _items.Find(w => w.Id == key);
+            WordItem item = null;
+
+            if (key > -1)
+                item = _items[key];
+
+            return item;
         }
 
         public int? GetKey(string value)
         {
-            int? id = null;
+            int? key = null;
 
-            WordItem item = _items.Find(w => w.Word == value);
-            if (item != null)
-                id = item.Id;
+            WordItem item = new WordItem() { Word = value };
 
-            return id;
+            int id = _items.BinarySearch(item, new ItemComparer());
+            if (id > -1)
+                key = id;
+
+            return key;
         }
 
         /// <summary>
@@ -86,13 +95,13 @@ namespace WordToWordConverter.Data
 					    WordItem item = _items[ix];
                         string word = item.Word;
 
+                        // Пропускаем по критерию длины слова (простор для дальнейшей оптимизации)
+                        if (word.Length != wordLen)
+                            continue;
+
 					    // Можно выходить, если слово уже начинается не так
 					    if (word.Substring(0, pos) != wordBeginning)
 						    break;
-					    
-                        // Пропускаем по критерию длины слова (простор для дальнейшей оптимизации)
-					    if (word.Length != wordLen) 
-						    continue;
 
 					    // Наконец, проверяем соответствие конца слова
 					    if (word.Substring(pos + 1) != wordEnding) 
@@ -129,9 +138,19 @@ namespace WordToWordConverter.Data
                     }
 
                     // сортировка по возрастанию
-                    _items.Sort((a, b) => String.CompareOrdinal(a.Word, b.Word));
+                    if (NeedSort)
+                        _items.Sort((x, y) => String.CompareOrdinal(x.Word, y.Word));
                 }
             });
+        }
+    }
+
+    class ItemComparer : IComparer<WordItem>
+    {
+        public int Compare(WordItem x, WordItem y)
+        {
+            // ReSharper disable once StringCompareToIsCultureSpecific
+            return x.Word.CompareTo(y.Word);
         }
     }
 }
