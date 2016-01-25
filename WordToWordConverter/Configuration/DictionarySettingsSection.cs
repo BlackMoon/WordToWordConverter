@@ -8,16 +8,6 @@ namespace WordToWordConverter.Configuration
     public class DictionarySettingsSection : ConfigurationSection
     {
         /// <summary>
-        /// Словарь файл или база?
-        /// </summary>
-        [ConfigurationProperty("isDatabase", DefaultValue = "false")]
-        public bool IsDatabase
-        {
-            get { return (bool)this["isDatabase"]; }
-            set { this["isDatabase"] = value; }
-        }
-
-        /// <summary>
         /// Словарь-файл требуется сортировка?
         /// </summary>
         [ConfigurationProperty("needSort", DefaultValue = "false")]
@@ -26,17 +16,7 @@ namespace WordToWordConverter.Configuration
             get { return (bool)this["needSort"]; }
             set { this["needSort"] = value; }
         }
-
-        /// <summary>
-        /// Строка соединения словаря-базы
-        /// </summary>
-        [ConfigurationProperty("connectionString", DefaultValue = "false")]
-        public string ConnectionString
-        {
-            get { return (string)this["connectionString"]; }
-            set { this["connectionString"] = value; }
-        }
-
+       
         /// <summary>
         /// Файл словаря
         /// </summary>
@@ -46,6 +26,5 @@ namespace WordToWordConverter.Configuration
             get { return (string) this["fileName"]; }
             set { this["fileName"] = value; }
         }
-
     }
 }

@@ -25,6 +25,8 @@ namespace WordToWordConverter
             IContainer container = ConfigureDependencies();
             IDictionaryMapper dictionaryMapper = null;
 
+            HtmlToTextConverter.Combine(@"d:\3\_vel_v3\data\psrc\10\", "*.txt", "dic1-5.txt");
+
             // чтение настроек
             AlgorithmSettingsSection algConfig = (AlgorithmSettingsSection)ConfigurationManager.GetSection("algorithmsection");
             DictionarySettingsSection dicConfig = (DictionarySettingsSection)ConfigurationManager.GetSection("dictionarysection");
@@ -32,22 +34,12 @@ namespace WordToWordConverter
             string dictionaryFile = dicConfig.FileName;
             if (!string.IsNullOrEmpty(dictionaryFile))
                 dictionaryFile = Path.GetFullPath(dictionaryFile);
-
-            if (dicConfig.IsDatabase)
+           
+            dictionaryMapper = new FileDictionaryMapper
             {
-                dictionaryMapper = new DbDictionaryMapper()
-                {
-                    ConnectionString = dicConfig.ConnectionString
-                };
-            }
-            else
-            {
-                dictionaryMapper = new FileDictionaryMapper
-                {
-                    FileName = dictionaryFile,
-                    NeedSort = dicConfig.NeedSort
-                };
-            }
+                FileName = dictionaryFile,
+                NeedSort = dicConfig.NeedSort
+            };
 
             Console.WriteLine("Загрузка словаря..");
             Task taskDictionary = dictionaryMapper.Load();
@@ -70,7 +62,7 @@ namespace WordToWordConverter
 
                     Console.WriteLine("Введите начальное слово:");
                     string wordFrom = Console.ReadLine();
-                    wordFrom = "НОрА";
+                    
                     string msg;
 
                     validator.Value = wordFrom;
@@ -80,7 +72,7 @@ namespace WordToWordConverter
                     Console.WriteLine();
                     Console.WriteLine("Введите конечное слово:");
                     string wordTo = Console.ReadLine();
-                    wordTo = "РАБА";
+                   
                     validator.Value = wordTo;
                     if (!validator.Validate(out msg))
                         throw new Exception(msg);
