@@ -5,8 +5,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using StructureMap;
 using WordToWordConverter.Configuration;
@@ -20,12 +18,10 @@ namespace WordToWordConverter
     class Program
     {
         private const string Yes = "Y";
+        private const string YesTrans = "Н";            // Y в транслите, чтобы не переключать раскладку клавиатуры после ввода слов
         private static void Main(string[] args)
         {
             IContainer container = ConfigureDependencies();
-            IDictionaryMapper dictionaryMapper = null;
-
-            HtmlToTextConverter.Combine(@"d:\3\_vel_v3\data\psrc\10\", "*.txt", "dic1-5.txt");
 
             // чтение настроек
             AlgorithmSettingsSection algConfig = (AlgorithmSettingsSection)ConfigurationManager.GetSection("algorithmsection");
@@ -34,8 +30,9 @@ namespace WordToWordConverter
             string dictionaryFile = dicConfig.FileName;
             if (!string.IsNullOrEmpty(dictionaryFile))
                 dictionaryFile = Path.GetFullPath(dictionaryFile);
-           
-            dictionaryMapper = new FileDictionaryMapper
+
+            // словарь
+            IDictionaryMapper dictionaryMapper = new FileDictionaryMapper
             {
                 FileName = dictionaryFile,
                 NeedSort = dicConfig.NeedSort
@@ -50,7 +47,7 @@ namespace WordToWordConverter
             IStringValidator validator = container.GetInstance<IStringValidator>();
 
             string answer = Yes;
-            while (answer != null && answer.ToUpper() == Yes)
+            while (answer != null && (answer.ToUpper() == Yes || answer.ToUpper() == YesTrans))
             {
                 Console.Clear();
                 WriteWelcome(algConfig);
